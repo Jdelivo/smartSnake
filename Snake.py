@@ -46,6 +46,10 @@ class snake:
             if self.canGo(direction):
                 self.direction = direction
 
+    def changeDirection(self, direction):
+        if self.canGo(direction):
+            self.direction = direction
+
     def move(self):
         if self.direction == 'UP':
             self.body = [Cube.cube((self.body[0].pos[0], self.body[0].pos[1]-1))] + self.body
