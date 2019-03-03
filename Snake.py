@@ -1,57 +1,22 @@
 import Cube
 
 
-class snake:
-    cantGo = ''
-    direction = 'LEFT'
+class Snake:
 
     def __init__(self, pos):
         self.body = []
-        self.head = Cube.cube(pos)
+        self.head = Cube.Cube(pos)
         self.body.append(self.head)
+        body1 = Cube.Cube((self.head.pos[0]+1, self.head.pos[1]))
+        self.body.append(body1)
+        body2 = Cube.Cube((self.head.pos[0] + 2, self.head.pos[1]))
+        self.body.append(body2)
+        self.direction = [-1, 0]
 
-    def reset(self, pos):
-        self.head = Cube.cube(pos)
-        self.body = []
-        self.body.append(self.head)
-        self.cantGo = ''
-        self.direction = 'LEFT'
+    def eat_snack(self, dire):
+        self.body.insert(0, Cube.Cube((self.head.pos[0] + dire[0], self.head.pos[1] + dire[1])))
 
-    def eatSnack(self, pos):
-        if self.body[0].pos == pos:
-            return True
-        else:
-            return False
-
-    def changeDirection(self, direction):
-        if self.canGo(direction):
-            self.direction = direction
-
-    def move(self):
-        if self.direction == 'UP':
-            self.body = [Cube.cube((self.body[0].pos[0], self.body[0].pos[1]-1))] + self.body
-            self.head = self.body[0]
-            if len(self.body) > 1:
-                self.cantGo = 'DOWN'
-        elif self.direction == 'DOWN':
-            self.body = [Cube.cube((self.body[0].pos[0], self.body[0].pos[1]+1))] + self.body
-            self.head = self.body[0]
-            if len(self.body) > 1:
-                self.cantGo = 'UP'
-        elif self.direction == 'RIGHT':
-            self.body = [Cube.cube((self.body[0].pos[0]+1, self.body[0].pos[1]))] + self.body
-            self.head = self.body[0]
-            if len(self.body) > 1:
-                self.cantGo = 'LEFT'
-        elif self.direction == 'LEFT':
-            self.body = [Cube.cube((self.body[0].pos[0]-1, self.body[0].pos[1]))] + self.body
-            self.head = self.body[0]
-            if len(self.body) > 1:
-                self.cantGo = 'RIGHT'
-        return self.body.pop()
-
-    def canGo(self, direction):
-        if self.cantGo == direction:
-            return False
-        else:
-            return True
+    def move(self, dire):
+        for i in range(len(self.body)-1, 0, -1):
+            self.body[i].pos = self.body[i-1].pos
+        self.head.pos = (self.head.pos[0] + dire[0], self.head.pos[1] + dire[1])

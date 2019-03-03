@@ -1,13 +1,13 @@
 import pygame
 
 
-class cube:
+class Cube:
     rows = 20
     w = 500
 
-    def __init__(self, pos, cubeType="snake"):
+    def __init__(self, pos, cube_type="snake"):
         self.pos = pos
-        if cubeType == "snake":
+        if cube_type == "snake":
             self.color = (255, 0, 0)
         else:  # if type == snack
             self.color = (0, 255, 0)
@@ -21,7 +21,7 @@ class cube:
         if head:
             centre = dis // 2
             radius = 3
-            circleMiddle = (i * dis + centre - radius, j * dis + 8)
-            circleMiddle2 = (i * dis + dis - radius * 2, j * dis + 8)
-            pygame.draw.circle(surface, (0, 0, 50), circleMiddle, radius)
-            pygame.draw.circle(surface, (0, 0, 50), circleMiddle2, radius)
+            circle_middle = (i * dis + centre - radius, j * dis + 8)
+            circle_middle2 = (i * dis + dis - radius * 2, j * dis + 8)
+            pygame.draw.circle(surface, (0, 0, 50), circle_middle, radius)
+            pygame.draw.circle(surface, (0, 0, 50), circle_middle2, radius)

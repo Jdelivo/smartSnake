@@ -1,4 +1,3 @@
-import torch
 import pygame
 import Snake
 import random
@@ -7,104 +6,105 @@ import numpy as np
 
 
 class Game:
-
-    def __init__(self, surface, width, rows, num_of_models, num_of_inputs):
+    def __init__(self, surface, width, rows):
         self.surface = surface
         self.width = width
         self.rows = rows
-        self.num_of_models = num_of_models
-        self.num_of_inputs = num_of_inputs
-        self.snake = Snake.snake((10, 10))
-        self.snack = self.randomSnack()
+        self.snake = Snake.Snake((10, 10))
         self.allowedSteps = 40
-        self.delay = 20
+        self.delay = 1000  # delay is necessary so that we can see what the snake does
         self.fitness = 0
+        self.snack = self.innit_snack(is_random=False)
 
-    def playTurn(self, model):
+    def play_turn(self, model):
+
         if self.allowedSteps > 0:
             self.allowedSteps -= 1
 
             pygame.time.delay(self.delay)
 
-            up = self.seeForward(1, 0)
-            down = self.seeForward(-1, 0)
-            right = self.seeForward(0, 1)
-            left = self.seeForward(0, -1)
+            up = self.see_forward(0, -1)
+            upright = self.see_forward(1, -1)
+            right = self.see_forward(1, 0)
+            downright = self.see_forward(1, 1)
+            down = self.see_forward(0, 1)
+            downleft = self.see_forward(-1, 1)
+            left = self.see_forward(-1, 0)
+            upleft = self.see_forward(-1, -1)
 
-            snack_right, snack_left, snack_front, snack_back = self.snackVector()
+            # snack_right, snack_left, snack_front, snack_back = self.snack_vector()
 
-            inputs = np.array([up, down, left, right, snack_right, snack_left, snack_front, snack_back])
-            inputs_torch = torch.from_numpy(inputs).float().cuda()
-            direction = model(inputs_torch).max(0)[1].item()
-
+            inputs = np.array([up, upleft, upright, right, left, down, downright, downleft]).reshape(-1)
+            direction = np.argmax(model.feedforward(inputs))
+            print(inputs)
             if direction == 0:
-                dir_s = 'UP'
+                dir_s = (0, -1)
             elif direction == 1:
-                dir_s = 'DOWN'
+                dir_s = (0, 1)
             elif direction == 2:
-                dir_s = 'RIGHT'
+                dir_s = (1, 0)
             else:
-                dir_s = 'LEFT'
+                dir_s = (-1, 0)
             crashed = self.move(dir_s)
 
-            for x in range(len(self.snake.body)):
-                if self.snake.head.pos in list(map(lambda z: z.pos, self.snake.body[x + 1:])) or crashed:
-                    if len(self.snake.body) < self.rows * self.rows:
-                        crashed = True
-                        self.snake.reset((10, 10))
-                        break
-            # else redraw the window with the new position of the snake
-            self.redrawWindow()
-
-            # if the snake has crushed we clear the cache of the gpu
             if crashed:
                 self.fitness -= 1
                 return False
 
+            self.redraw_window()
             return True
         else:
             print('DID NOT DIE!')
-            self.fitness += 1
             return False
 
-    def randomSnack(self):
+    def innit_snack(self, is_random=True):
         positions = self.snake.body
 
         while True:
-            x = random.randrange(self.rows)
-            y = random.randrange(self.rows)
-            if len(list(filter(lambda z: z.pos == (x, y), positions))) > 0:
-                continue
+            if is_random:
+                x = random.randrange(self.rows)
+                y = random.randrange(self.rows)
+                if len(list(filter(lambda z: z.pos == (x, y), positions))) > 0:
+                    continue
+                else:
+                    break
             else:
-                break
-        return Cube.cube((x, y), cubeType='snack')
+                return Cube.Cube((15,15), cube_type='snack')
+        return Cube.Cube((x, y), cube_type='snack')
 
-    def seeForward(self, vert, hor):
+    def see_forward(self, hor, vert):
         x = list(self.snake.head.pos)
-        x[0] += vert
-        x[1] += hor
-        if 0 > x[0] or 0 > x[1] or self.rows-1 < x[0] or self.rows-1 < x[1]:
-            return -1
-        elif self.snake.body[0].pos in list(map(lambda z: z.pos, self.snake.body[1:])):
-            return -1
-        elif self.snake.head.pos == list(self.snack.pos):
-                return 1
-        return 0
+        dist_snack, dist_wall, dist_body = 0, 0, 0
+        distance = 0
+        body_found = False
+        snack_found = False
+        while True:
+            x[0] += hor
+            x[1] += vert
+            distance += 1
+            if not (1 < x[0] < self.rows-2 and 1 < x[1] < self.rows-2):
+                break
+            if not body_found and tuple(x) in list(map(lambda z: z.pos, self.snake.body[1:])):
+                dist_body = distance
+            elif not snack_found and tuple(x) == self.snack.pos:
+                dist_snack = distance
+        dist_wall = distance
+        return [dist_snack, dist_wall, dist_body]
 
-    def snackVector(self):
-        if self.snake.direction == 'RIGHT':
+    def snack_vector(self):
+        if self.snake.direction == (1, 0):
             front = 1 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 0
             back = 0 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 1
             right = 1 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 0
             left = 0 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 1
             return front, back, right, left
-        elif self.snake.direction == 'LEFT':
+        elif self.snake.direction == (-1, 0):
             front = 1 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 0
             back = 0 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 1
             left = 1 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 0
             right = 0 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 1
             return front, back, right, left
-        elif self.snake.direction == 'UP':
+        elif self.snake.direction == (0, -1):
             left = 1 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 0
             right = 0 if self.snack.pos[0] - self.snake.head.pos[0] > 0 else 1
             back = 1 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 0
@@ -117,34 +117,36 @@ class Game:
             back = 0 if self.snack.pos[1] - self.snake.head.pos[1] > 0 else 1
             return front, back, right, left
 
-    def move(self, direction):
-        self.snake.changeDirection(direction)
-        lastCube = self.snake.move()
-        if self.snake.head.pos[0] < 0 or self.snake.head.pos[0] > self.rows - 1 \
-                or self.snake.head.pos[1] < 0 or self.snake.head.pos[1] > self.rows - 1:
+    def move(self, dire):
+        newpos = (self.snake.head.pos[0] + dire[0], self.snake.head.pos[1] + dire[1])
+        if newpos[0] < 0 or newpos[0] > self.rows - 1 or newpos[1] < 0 or newpos[1] > self.rows - 1:
+            return True
+        elif newpos in list(map(lambda x: x.pos, self.snake.body)):
             return True
         else:
-            if self.snake.head.pos == self.snack.pos:
-                self.snake.body.append(lastCube)
-                self.snack = self.randomSnack()
+            if newpos == self.snack.pos:
+                self.snake.eat_snack(dire)
+                self.snack = self.innit_snack()
                 self.fitness += 1
                 print('SNACK!')
                 self.allowedSteps += 40
+            else:
+                self.snake.move(dire)
             return False
 
-    def drawGrid(self):
-        sizeBtwn = self.width // self.rows
+    def draw_grid(self):
+        size_btwn = self.width // self.rows
         x = 0
         y = 0
         for l in range(self.rows):
-            x = x + sizeBtwn
-            y = y + sizeBtwn
+            x = x + size_btwn
+            y = y + size_btwn
             pygame.draw.line(self.surface, (255, 255, 255), (x, 0), (x, self.width))
             pygame.draw.line(self.surface, (255, 255, 255), (0, y), (self.width, y))
 
-    def redrawWindow(self):
+    def redraw_window(self):
         self.surface.fill((0, 0, 0))  # fill the backround with black color
-        self.drawGrid()  # draw lines to seperate the squares
+        self.draw_grid()  # draw lines to seperate the squares
         self.snake.body[0].draw(self.surface, True)  # draw the head of snake
         # draw the rest of the snake
         for cube in self.snake.body[1:]:
