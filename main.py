@@ -1,6 +1,6 @@
 import pygame
-import SnakeModel
-import Game
+from SnakeModel import SnakeModel
+from Game import Game
 import os
 import numpy as np
 
@@ -8,7 +8,7 @@ def mate(mother, father, chance, num_of_inputs, hidden_neurons, num_of_outputs, 
     new_generation = []
 
     for i in range(models - 2):
-        kid = SnakeModel.SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs)
+        kid = SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs)
         kid.mate(father, mother)
         kid.mutate(chance)
         new_generation.append(kid)
@@ -18,8 +18,7 @@ def mate(mother, father, chance, num_of_inputs, hidden_neurons, num_of_outputs, 
 
     for i, model in enumerate(new_generation):
         model.save(i)
-        print('I', end='')
-    print()
+    print('--------------------')
 
     return new_generation
 
@@ -27,9 +26,9 @@ def mate(mother, father, chance, num_of_inputs, hidden_neurons, num_of_outputs, 
 def main():
     width = 500
     rows = 20
-    num_of_inputs = 24
+    num_of_inputs = 6
     hidden_neurons = 25
-    num_of_outputs = 4
+    num_of_outputs = 3
     pygame.init()
     surface = pygame.display.set_mode((width, width))
     num_of_models = 200
@@ -44,7 +43,7 @@ def main():
 
     last_gen_models = []
     for i in range(num_of_models):
-        last_gen_models.append(SnakeModel.SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs))
+        last_gen_models.append(SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs))
 
         # if we haven't already saved models
         try:
@@ -52,28 +51,36 @@ def main():
         except:
             pass
 
+    bestScoreSoFar = 0
+
     while True:
         epochs += 1
         np.save('epochs.npy', epochs)
         print('Epoch:', epochs)
 
-        fitness = []
+        fitnesses = []
+        scores = []
         for i in range(num_of_models):
-            game = Game.Game(surface, width, rows)
+            game = Game(surface, width, rows)
             model = last_gen_models[i]
 
             while True:
                 if not game.play_turn(model):
                     break
 
-            fitness.append(game.fitness)
+            fitnesses.append(game.fitness)
+            scores.append(game.score)
 
         chance = 0.1
         best_models = []
-        print('Best fitness:', max(fitness))
-        for i in range(len(fitness)):
-            best_models.append(fitness.index(max(fitness)))
-            fitness.remove(max(fitness))
+        print('Best fitness:', max(fitnesses))
+        print('Best score:', max(scores))
+        if max(scores) > bestScoreSoFar:
+            bestScoreSoFar = max(scores)
+        print('Best score so far:', bestScoreSoFar)
+        for i in range(len(fitnesses)):
+            best_models.append(fitnesses.index(max(fitnesses)))
+            fitnesses.remove(max(fitnesses))
 
         last_gen_models = mate(last_gen_models[best_models[0]], last_gen_models[best_models[1]], chance,
                                num_of_inputs, hidden_neurons, num_of_outputs, num_of_models)
