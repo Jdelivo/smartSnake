@@ -3,6 +3,8 @@ import numpy as np
 
 
 class SnakeModel:
+    fitness = 0
+
     def __init__(self, num_of_inputs, hidden_neurons, num_of_outputs):
         self.layers = []
         self.layers.append(np.random.rand(num_of_inputs, hidden_neurons))
@@ -42,3 +44,11 @@ class SnakeModel:
 
     def load(self, i):
         self.layers = np.load('models/model' + str(i) + '.npy')
+
+    def saveParent(self, parent):
+        np.save('models/' + parent + 'layers.npy', self.layers)
+        np.save('models/' + parent + 'fitness.npy', self.fitness)
+
+    def loadParent(self, parent):
+        self.layers = np.load('models/' + parent + 'layers.npy')
+        self.fitness = np.load('models/' + parent + 'fitness.npy')

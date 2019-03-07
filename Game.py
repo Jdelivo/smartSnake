@@ -166,7 +166,7 @@ class Game:
             self.snack = self.innit_snack()
             self.fitness += 20
             self.score += 1
-            self.allowedSteps += 40
+            self.allowedSteps += 100
             self.redraw_window()
             return False
         else:
