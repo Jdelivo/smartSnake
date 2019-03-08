@@ -2,6 +2,7 @@ import pygame
 
 
 class Cube:
+    ''' The snake and the snack consist of this class, used to draw the snake and the snack'''
     rows = 20
     w = 500
 

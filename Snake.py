@@ -2,7 +2,7 @@ import Cube
 
 
 class Snake:
-
+    ''' Snake class, used to draw the snake and calculate its body position '''
     def __init__(self, pos):
         self.body = []
         self.head = Cube.Cube(pos)

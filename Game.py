@@ -13,19 +13,18 @@ class Game:
         self.rows = rows
         self.snake = Snake((10, 10))
         self.allowedSteps = 40
-        self.delay = 0  # delay is necessary so that we can see what the snake does
         self.fitness = 0
         self.snack = self.innit_snack(is_random=True)
         self.distance = math.sqrt((self.snack.pos[0] - self.snake.head.pos[0])**2 +
                                   (self.snack.pos[1] - self.snake.head.pos[1])**2)
         self.score = 0
 
-    def play_turn(self, model):
-
+    def play_turn(self, model, delay):
+        ''' Each turn move or eat a snack'''
         if self.allowedSteps > 0:
             self.allowedSteps -= 1
 
-            pygame.time.delay(self.delay)
+            pygame.time.delay(delay)
 
             inputs = np.array([*self.inputs()]).reshape(-1)
             direction = np.argmax(model.feedforward(inputs))
@@ -68,6 +67,7 @@ class Game:
             return False
 
     def inputs(self):
+        ''' Calculate what the snake sees and where is the snack '''
         snackAhead = 0
         snackRight = 0
         snackLeft = 0
@@ -125,6 +125,7 @@ class Game:
         return snackAhead, snackRight, snackLeft, wallAhead, wallRight, wallLeft
 
     def look(self, direction):
+        ''' Check a single direction until collapse on wall '''
         distance = 1
         cube = (self.snake.head.pos[0]+direction[0], self.snake.head.pos[1]+direction[1])
         while cube not in list(map(lambda x: x.pos, self.snake.body[1:])) and 0 < cube[0] < self.rows -1 and 0 < cube[1] < self.rows-1:
@@ -145,6 +146,7 @@ class Game:
         return self.move((-1, 0))
 
     def innit_snack(self, is_random=True):
+        ''' Re-innitialize the snack to a new position '''
         positions = self.snake.body
 
         while True:
@@ -160,6 +162,7 @@ class Game:
         return Cube((x, y), cube_type='snack')
 
     def move(self, dire):
+        ''' Move to a new square or eat a snack'''
         newpos = (self.snake.head.pos[0] + dire[0], self.snake.head.pos[1] + dire[1])
         if newpos == self.snack.pos:
             self.snake.eat_snack(dire)
@@ -178,6 +181,8 @@ class Game:
                 return True
             return False
 
+
+    # Used to redraw the window each turn
     def draw_grid(self):
         size_btwn = self.width // self.rows
         x = 0
@@ -197,27 +202,3 @@ class Game:
             cube.draw(self.surface)
         self.snack.draw(self.surface)  # draw the snack
         pygame.display.update()
-
-    def moveUser(self):
-        pygame.time.delay(self.delay)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-
-            keys = pygame.key.get_pressed()
-
-            for key in keys:
-                if keys[pygame.K_LEFT]:
-                    return self.moveLeft()
-
-                elif keys[pygame.K_RIGHT]:
-                    return self.moveRight()
-
-                elif keys[pygame.K_UP]:
-                    return self.moveUp()
-
-                elif keys[pygame.K_DOWN]:
-                    return self.moveDown()
-
-                else:
-                    return self.move(self.snake.direction)

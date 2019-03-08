@@ -4,7 +4,9 @@ from Game import Game
 import os
 import numpy as np
 
+
 def mate(mother, father, chance, num_of_inputs, hidden_neurons, num_of_outputs, models):
+    ''' used to produce a new generation of neural networks '''
     new_generation = []
 
     for i in range(models):
@@ -32,27 +34,32 @@ def main():
     pygame.init()
     surface = pygame.display.set_mode((width, width))
     num_of_models = 200
+    delay = 0  # delay is necessary so that we can see what the snake does
     epochs = 0
     parent1 = SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs)
     parent2 = SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs)
+    highscore = 0
+
     # create models folder to save our models
     if not os.path.exists('models'):
         os.makedirs('models')
+
+    # try to load a generation from a previous execution
     try:
         epochs = np.load('epochs.npy')
-        parent1.load('parent1')
-        parent2.load('parent2')
+        parent1.loadParent('parent1')
+        parent2.loadParent('parent2')
+        highscore = np.load('highscore.npy')
     except:
         np.save('epochs.npy', epochs)
+        np.save('highscore.npy', highscore)
         parent1.saveParent('parent1')
         parent2.saveParent('parent2')
-
 
     last_gen_models = []
     for i in range(num_of_models):
         last_gen_models.append(SnakeModel(num_of_inputs, hidden_neurons, num_of_outputs))
 
-        # if we haven't already saved models
         try:
             last_gen_models[i].load(i)
         except:
@@ -63,6 +70,7 @@ def main():
         np.save('epochs.npy', epochs)
         print('Epoch:', epochs)
 
+        # try all the neural networks of this generation
         fitnesses = []
         scores = []
         for i in range(num_of_models):
@@ -70,34 +78,34 @@ def main():
             model = last_gen_models[i]
 
             while True:
-                if not game.play_turn(model):
+                if not game.play_turn(model, delay):
                     break
 
             fitnesses.append(game.fitness)
             scores.append(game.score)
 
+        # produce new networks with 2 parents and mutation chance
         chance = 0.2
-        print('Best fitness:', max(fitnesses))
         print('Best score:', max(scores))
+        if max(scores) > highscore:
+            highscore = max(scores)
+
+        print('Highscore:', highscore)
 
         if max(fitnesses) >= parent1.fitness:
             parent2 = parent1
             parent1 = last_gen_models[fitnesses.index(max(fitnesses))]
             parent1.fitness = max(fitnesses)
-            print('parent1 changed!!')
         elif max(fitnesses) >= parent2.fitness:
             parent2 = last_gen_models[fitnesses.index(max(fitnesses))]
             parent2.fitness = max(fitnesses)
-            print('parent2 changed!!')
-
-        print('parent1 fitness', parent1.fitness, end=' ')
-        print('parent2 fitness', parent2.fitness)
 
         last_gen_models = mate(parent1, parent2, chance,
                                num_of_inputs, hidden_neurons, num_of_outputs, num_of_models)
 
         parent1.saveParent('parent1')
         parent2.saveParent('parent2')
+        np.save('highscore.npy', highscore)
 
 
 main()

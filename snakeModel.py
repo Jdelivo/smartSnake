@@ -3,6 +3,7 @@ import numpy as np
 
 
 class SnakeModel:
+    ''' Neural network class with feedforward, sigmoid activation and mutation '''
     fitness = 0
 
     def __init__(self, num_of_inputs, hidden_neurons, num_of_outputs):
