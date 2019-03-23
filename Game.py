@@ -53,8 +53,8 @@ class Game:
             if crashed:
                 return False
 
-            newDistance = math.sqrt((self.snack.pos[0] - self.snake.head.pos[0]) ** 2 +
-                                    (self.snack.pos[1] - self.snake.head.pos[1]) ** 2)
+            newDistance = abs(self.snack.pos[0] - self.snake.head.pos[0]) +\
+                          abs(self.snack.pos[1] - self.snake.head.pos[1])
 
             if newDistance < self.distance:
                 self.fitness += 1
